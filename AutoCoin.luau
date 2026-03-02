@@ -37,6 +37,7 @@ local pressIndex = 1
 --// GUI ROOT
 local gui = Instance.new("ScreenGui", PlayerGui)
 gui.Name = "Aethyrion_CoiningGUI_f0r_push3r"
+gui..ResetOnSpawn = false
 
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.fromOffset(460, 380)
@@ -477,8 +478,8 @@ RunService.Heartbeat:Connect(function(dt)
 	barFill.Size = UDim2.fromScale(math.clamp(used / total, 0, 1), 1)
 
 	lastUse += dt
-				-- this should allow the script to run faster, as we triple the speed secretly
-	if lastUse < (1 / (coinSpeed * 3)) then return end
+				-- this should allow the script to run faster, as we -triple (3x)- sextuple (6x) the speed secretly
+	if lastUse < (1 / (coinSpeed * 6)) then return end
 	lastUse = 0
 
 	if selectedPressID == "ALL" then
@@ -502,3 +503,4 @@ end)
 
 -- init
 refreshCoinPresses()
+
