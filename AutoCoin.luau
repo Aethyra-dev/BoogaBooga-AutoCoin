@@ -37,7 +37,7 @@ local pressIndex = 1
 --// GUI ROOT
 local gui = Instance.new("ScreenGui", PlayerGui)
 gui.Name = "Aethyrion_CoiningGUI_f0r_push3r"
-gui..ResetOnSpawn = false
+gui.ResetOnSpawn = false
 
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.fromOffset(460, 380)
@@ -503,4 +503,5 @@ end)
 
 -- init
 refreshCoinPresses()
+
 
