@@ -479,7 +479,7 @@ RunService.Heartbeat:Connect(function(dt)
 
 	lastUse += dt
 				-- this should allow the script to run faster, as we -triple (3x)- sextuple (6x) the speed secretly
-	if lastUse < (1 / (coinSpeed * 6)) then return end
+	if lastUse < (1 / (coinSpeed * 3)) then return end
 	lastUse = 0
 
 	if selectedPressID == "ALL" then
@@ -503,5 +503,6 @@ end)
 
 -- init
 refreshCoinPresses()
+
 
 
