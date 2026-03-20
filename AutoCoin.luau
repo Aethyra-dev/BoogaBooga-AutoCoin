@@ -27,7 +27,7 @@ local startGold = 0				-- Leave this alone
 local targetGold = 0			-- Leave this alone
 local lastUse = 0				-- Leave this alone
 
-local walkspeed = 21			-- Players walkspeed
+local walkspeed = 19			-- Players walkspeed
 
 -- selector state
 local selectedPressID = "All"
