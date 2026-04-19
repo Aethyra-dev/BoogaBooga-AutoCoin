@@ -22,12 +22,13 @@ local useGoldAmount = 0			-- Amount of Gold to coin // 18+ speed should have 1 t
 local coinSpeed = 60			-- Default Coin Speed
 local coiningEnabled = false	-- Leave this alone
 local paused = false			-- Leave this alone
+local autoKickOnFinish = false  -- Leave this alone
 
 local startGold = 0				-- Leave this alone
 local targetGold = 0			-- Leave this alone
 local lastUse = 0				-- Leave this alone
 
-local walkspeed = 19			-- Players walkspeed
+local walkspeed = 21			-- Players walkspeed
 
 -- selector state
 local selectedPressID = "All"
@@ -47,6 +48,13 @@ main.BackgroundColor3 = Color3.fromRGB(30,30,30)
 main.BorderSizePixel = 0
 main.Active = true
 main.Draggable = true
+
+print("Initializing VirtualUser to prevent AFK kick...")
+local bb = game:service'VirtualUser'
+game:service'Players'.LocalPlayer.Idled:connect(function()
+	bb:CaptureController()
+	bb:ClickButton2(Vector2.new())
+end)
 
 --// UI HELPERS
 local function label(text, y)
@@ -137,6 +145,13 @@ local startBtn = button("Start", 20, 170, 130)
 local pauseBtn = button("Pause", 160, 170, 130)
 
 local memoryBtn = button("Memory Check", 300, 170, 130)
+
+local kickBtn = button("Auto Kick: OFF", 300, 205, 130)
+
+kickBtn.MouseButton1Click:Connect(function()
+	autoKickOnFinish = not autoKickOnFinish
+	kickBtn.Text = "Auto Kick: " .. (autoKickOnFinish and "ON" or "OFF")
+end)
 
 --// COIN PRESS TRACKING + BILLBOARDS
 local CoinPresses = {}
@@ -469,6 +484,13 @@ RunService.Heartbeat:Connect(function(dt)
 		coiningEnabled = false
 		startBtn.Text = "Start"
 		barFill.Size = UDim2.fromScale(1,1)
+
+		if autoKickOnFinish then
+			task.delay(0.2, function()
+				Player:Kick("Coining finished.")
+			end)
+		end
+
 		return
 	end
 
@@ -479,7 +501,7 @@ RunService.Heartbeat:Connect(function(dt)
 
 	lastUse += dt
 				-- this should allow the script to run faster, as we -triple (3x)- sextuple (6x) the speed secretly
-	if lastUse < (1 / (coinSpeed * 3)) then return end
+	if lastUse < (1 / (coinSpeed * 6)) then return end
 	lastUse = 0
 
 	if selectedPressID == "ALL" then
@@ -503,6 +525,3 @@ end)
 
 -- init
 refreshCoinPresses()
-
-
-
