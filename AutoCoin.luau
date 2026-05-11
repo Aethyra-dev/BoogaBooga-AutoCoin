@@ -9,6 +9,7 @@ local Deployables = workspace:WaitForChild("Deployables")
 
 --// MODULES
 local Modules = ReplicatedStorage:WaitForChild("Modules")
+local ItemData = select(2, pcall(require, Modules:WaitForChild("ItemData")))
 local Packets = select(2, pcall(require, Modules:WaitForChild("Packets")))
 local ItemIDS = select(2, pcall(require, Modules:WaitForChild("ItemIDS")))
 
@@ -30,10 +31,45 @@ local lastUse = 0				-- Leave this alone
 
 local walkspeed = 21			-- Players walkspeed
 
+local foods = {}
+
 -- selector state
 local selectedPressID = "All"
 local pressOrder = {}
 local pressIndex = 1
+
+-- name flip settings
+local nameFlipEnabled = false
+local index = 1
+local INTERVAL = 1
+local SWAP_INTERVAL = 15
+
+local foods = {}
+
+for itemName, data in pairs(ItemData) do
+	if type(data) == "table" then
+		if data.itemType == "food" then
+			table.insert(foods, itemName)
+		end
+	end
+end
+
+table.sort(foods, function(a, b)
+	return a < b
+end)
+
+-- debug print
+
+-- Path to the list container
+local listContainer = PlayerGui:WaitForChild("SecondaryGui")
+    :WaitForChild("PlayerList")
+    :WaitForChild("List")
+
+-- Names to cycle through
+local names = {
+    "9usher. on discord to buy",
+	"discord.gg/seya27eKXF"
+}
 
 --// GUI ROOT
 local gui = Instance.new("ScreenGui", PlayerGui)
@@ -148,6 +184,13 @@ local memoryBtn = button("Memory Check", 300, 170, 130)
 
 local kickBtn = button("Auto Kick: OFF", 300, 205, 130)
 
+local nameFlipBtn = button("Name Flip: OFF", 300, 240, 130)
+
+nameFlipBtn.MouseButton1Click:Connect(function()
+	nameFlipEnabled = not nameFlipEnabled
+	nameFlipBtn.Text = "Name Flip: " .. (nameFlipEnabled and "ON" or "OFF")
+end)
+
 kickBtn.MouseButton1Click:Connect(function()
 	autoKickOnFinish = not autoKickOnFinish
 	kickBtn.Text = "Auto Kick: " .. (autoKickOnFinish and "ON" or "OFF")
@@ -170,6 +213,80 @@ dropdownFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
 dropdownFrame.BorderSizePixel = 0
 dropdownFrame.Visible = false
 dropdownFrame.ClipsDescendants = true
+
+-- FOOD DROPDOWN (same as your old press dropdown style)
+
+label("Food Selector", 210)
+
+local selectedFood = foods[1] or "No Food Found"
+
+local dropdownBtn_eat = button("Selected Food: " .. selectedFood, 300, 275, 130)
+
+-- container
+local dropdownFrame_eat = Instance.new("Frame", main)
+dropdownFrame_eat.Size = UDim2.fromOffset(200, 150)
+dropdownFrame_eat.Position = UDim2.fromOffset(20, 270)
+dropdownFrame_eat.BackgroundColor3 = Color3.fromRGB(40,40,40)
+dropdownFrame_eat.BorderSizePixel = 0
+dropdownFrame_eat.Visible = false
+dropdownFrame_eat.ClipsDescendants = true
+
+-- scrolling list
+local scroll_eat = Instance.new("ScrollingFrame", dropdownFrame_eat)
+scroll_eat.Size = UDim2.fromScale(1,1)
+scroll_eat.CanvasSize = UDim2.new(0,0,0,0)
+scroll_eat.ScrollBarImageTransparency = 0
+scroll_eat.ScrollBarThickness = 6
+scroll_eat.BackgroundTransparency = 1
+scroll_eat.BorderSizePixel = 0
+scroll_eat.AutomaticCanvasSize = Enum.AutomaticSize.None
+
+local layout_eat = Instance.new("UIListLayout", scroll_eat)
+layout_eat.Padding = UDim.new(0, 4)
+
+-- keep canvas sized to content
+layout_eat:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scroll_eat.CanvasSize = UDim2.fromOffset(0, layout_eat.AbsoluteContentSize.Y + 6)
+end)
+
+function updateFoodDropdown()
+	-- clear old buttons
+	for _, child in ipairs(scroll_eat:GetChildren()) do
+		if child:IsA("TextButton") then
+			child:Destroy()
+		end
+	end
+
+	local function addOption(name)
+		local b = Instance.new("TextButton")
+		b.Size = UDim2.fromOffset(200, 24)
+		b.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		b.TextColor3 = Color3.new(1, 1, 1)
+		b.Font = Enum.Font.SourceSans
+		b.TextScaled = true
+		b.AutoButtonColor = true
+		b.Text = name
+		b.Parent = scroll_eat
+
+		b.MouseButton1Click:Connect(function()
+			selectedFood = name
+			dropdownBtn_eat.Text = "Selected Food: " .. name
+			dropdownFrame_eat.Visible = false
+		end)
+	end
+
+	-- add all foods
+	for _, foodName in ipairs(foods) do
+		addOption(foodName)
+	end
+end
+
+-- toggle dropdown
+dropdownBtn_eat.MouseButton1Click:Connect(function()
+	dropdownFrame_eat.Visible = not dropdownFrame_eat.Visible
+end)
+
+updateFoodDropdown()
 
 -- scrolling list
 local scroll = Instance.new("ScrollingFrame", dropdownFrame)
@@ -520,6 +637,59 @@ RunService.Heartbeat:Connect(function()
 		Player.Character.Humanoid.WalkSpeed = walkspeed
 	else
 		task.wait(1)
+	end
+end)
+
+-- Apply current name to a label
+local function applyName(label)
+	if label and label:IsA("TextLabel") and label.Name == "NameLabel" then
+		label.Text = names[index]
+	end
+end
+
+-- Apply to everything (fallback / interval use)
+local function applyToAll()
+	for _, obj in ipairs(listContainer:GetDescendants()) do
+		applyName(obj)
+	end
+end
+
+-- 🔁 Interval loop (keeps cycling names)
+task.spawn(function()
+	while true do
+		if nameFlipEnabled then
+			applyToAll()
+
+			index += 1
+			if index > #names then
+				index = 1
+			end
+
+			-- swap names every SWAP_INTERVAL cycles
+			if index % SWAP_INTERVAL == 0 then
+				local currentName = names[index]
+				local nextIndex = index + 1
+
+				if nextIndex > #names then
+					nextIndex = 1
+				end
+
+				names[index] = names[nextIndex]
+				names[nextIndex] = currentName
+			end
+		end
+
+		task.wait(INTERVAL)
+	end
+end)
+
+-- ⚡ INSTANT apply when UI updates (THIS FIXES YOUR ISSUE)
+listContainer.DescendantAdded:Connect(function(obj)
+	if not nameFlipEnabled then return end
+	if obj:IsA("TextLabel") and obj.Name == "NameLabel" then
+		task.defer(function()
+			applyName(obj)
+		end)
 	end
 end)
 
