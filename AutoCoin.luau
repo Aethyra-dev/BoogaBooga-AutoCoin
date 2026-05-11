@@ -176,6 +176,14 @@ barFill.Size = UDim2.fromScale(0,1)
 barFill.BackgroundColor3 = Color3.fromRGB(0,170,255)
 barFill.BorderSizePixel = 0
 
+local progressText = Instance.new("TextLabel", barBack)
+progressText.Size = UDim2.fromScale(1, 1)
+progressText.BackgroundTransparency = 1
+progressText.TextColor3 = Color3.new(1,1,1)
+progressText.Font = Enum.Font.SourceSansBold
+progressText.TextScaled = true
+progressText.Text = "0%"
+
 --// BUTTONS
 local startBtn = button("Start", 20, 170, 130)
 local pauseBtn = button("Pause", 160, 170, 130)
@@ -213,8 +221,6 @@ dropdownFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
 dropdownFrame.BorderSizePixel = 0
 dropdownFrame.Visible = false
 dropdownFrame.ClipsDescendants = true
-
--- FOOD DROPDOWN (same as your old press dropdown style)
 
 label("Food Selector", 210)
 
@@ -614,7 +620,15 @@ RunService.Heartbeat:Connect(function(dt)
 
 	local used = startGold - currentGold
 	local total = startGold - targetGold
-	barFill.Size = UDim2.fromScale(math.clamp(used / total, 0, 1), 1)
+	--barFill.Size = UDim2.fromScale(math.clamp(used / total, 0, 1), 1)  -- old kept for broken ahh code
+	local percent = 0
+
+	if total > 0 then
+		percent = math.clamp(used / total, 0, 1)
+	end
+
+	barFill.Size = UDim2.fromScale(percent, 1)
+	progressText.Text = tostring(math.floor(percent * 100)) .. "%"
 
 	lastUse += dt
 				-- this should allow the script to run faster, as we -triple (3x)- sextuple (6x) the speed secretly
